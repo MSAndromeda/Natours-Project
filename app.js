@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -9,12 +10,24 @@ const hpp = require('hpp');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 const globalErrorController = require('./controlers/errorController');
 const AppError = require('./utils/appError');
 
 const app = express();
 
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 // TODO: 1) GLOBAL MIDDLEWARES
+
+// Serving Static Files
+// app.use(express.static(`${__dirname}/public`));
+// we do not use the above method as we may or maynot know if adding / to the
+// path will lead to a wrong path or correct one the below function handles
+// that automatically providing correct path
+app.use(express.static(path.join(__dirname, 'public')));
+
 // set security HTTP headers
 app.use(helmet());
 
@@ -55,9 +68,6 @@ app.use(
   }),
 );
 
-// Serving Static Files
-app.use(express.static(`${__dirname}/public`));
-
 // Test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
@@ -65,6 +75,8 @@ app.use((req, res, next) => {
 });
 
 //  TODO: 2) ROUTES
+
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
